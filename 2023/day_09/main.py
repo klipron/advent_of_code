@@ -36,8 +36,9 @@ def part2(filename: str):
 
 
 def main():
+    day = int(os.path.split(os.path.dirname(__file__))[1].split("_")[1])
     year = os.path.split(os.path.split(os.path.dirname(__file__))[0])[1]
-    advent_date = datetime(int(year), 12, 9)
+    advent_date = datetime(int(year), 12, day)
     print(f"Advent of Code Day {advent_date.day}")
     print("=" * 80)
     if advent_date > datetime.now():

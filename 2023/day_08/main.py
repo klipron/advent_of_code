@@ -1,5 +1,6 @@
-import os
-from math import lcm
+import os, functools
+from datetime import datetime
+from math import lcm, gcd
 
 KEY_FILE = "key.txt"
 INPUT_FILE = os.path.join(os.path.dirname(__file__), "input.txt")
@@ -32,53 +33,56 @@ def parse_file(filename: str):
 
 
 def part1(filename: str):
-    steps = 0
     instructions, nodes = parse_file(filename)
 
-    LR = "LR"
+    steps = 0
     current_node = "AAA"
     FINAL_NODE = "ZZZ"
-    not_found = True
-    while not_found:
+    while current_node != FINAL_NODE:
         for i in instructions:
-            current_node = nodes[current_node][LR.index(i)]
-            steps += 1
             if current_node == FINAL_NODE:
-                not_found = False
                 break
+            current_node = nodes[current_node]["LR".index(i)]
+            steps += 1
     return steps
 
 
 def part2(filename: str):
     instructions, nodes = parse_file(filename)
 
-    LR = "LR"
     end_node_steps: list[int] = []
     for node in nodes.keys():
         if not node.endswith("A"):
             continue
         steps = 0
-        not_found = True
-        while not_found:
+        while not node.endswith("Z"):
             for i in instructions:
                 steps += 1
-                node = nodes[node][LR.index(i)]
+                node = nodes[node]["LR".index(i)]
                 if node.endswith("Z"):
                     end_node_steps.append(steps)
-                    not_found = False
                     break
+    # Other way to calculate LCM
+    # return functools.reduce(lambda x, y: (x * y) // gcd(x, y), end_node_steps)
     return lcm(*end_node_steps)
 
 
 def main():
-    day = 8
-    print(f"Advent of Code Day {day}")
+    day = int(os.path.split(os.path.dirname(__file__))[1].split("_")[1])
+    year = os.path.split(os.path.split(os.path.dirname(__file__))[0])[1]
+    advent_date = datetime(int(year), 12, day)
+    print(f"Advent of Code Day {advent_date.day}")
+    print("=" * 80)
+    if advent_date > datetime.now():
+        print(
+            f"Today's challenge is not ready as yet please try again in {advent_date - datetime.now()}"
+        )
+        return
     input_file = INPUT_FILE
     if not os.path.exists(input_file):
-        get_input_file(day=day)
+        get_input_file(advent_date=advent_date)
         if not os.path.exists(input_file):
             return print("Failed to fetch input file.")
-    print("=" * 80)
     print(f"Answer Part 1: {part1(input_file) or ''}")
     print("=" * 80)
     print(f"Answer Part 2: {part2(input_file) or ''}")
