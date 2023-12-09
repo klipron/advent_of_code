@@ -18,21 +18,26 @@ def get_input_file(
 def parse_file(filename: str):
     with open(filename) as f:
         for i, line in enumerate(f.readlines()):
-            ...
+            yield map(int, line.strip().split())
+
+
+def get_next_value(*nums, add_to_start=False):
+    diffs = [nums[i + 1] - nums[i] for i in range(len(nums) - 1)]
+    if not any(diffs):
+        return nums[-1]
+    if add_to_start:
+        return nums[0] - get_next_value(*diffs, add_to_start=add_to_start)
+    return nums[-1] + get_next_value(*diffs, add_to_start=add_to_start)
 
 
 def part1(filename: str):
-    ans = 0
     data = parse_file(filename)
-
-    return ans
+    return sum(get_next_value(*nums) for nums in data)
 
 
 def part2(filename: str):
-    ans = 0
     data = parse_file(filename)
-
-    return ans
+    return sum(get_next_value(*nums, add_to_start=True) for nums in data)
 
 
 def main():
