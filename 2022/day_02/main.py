@@ -21,48 +21,46 @@ def parse_file(filename: str):
             yield tuple(line.split())
 
 
+SCORES = {"A": 1, "B": 2, "C": 3}
+DEFEATED_SHAPES = {"A": "C", "B": "A", "C": "B"}
+STRATEGY_SHAPES = {"X": "A", "Y": "B", "Z": "C"}
+
+
 def part1(filename: str):
     ans = 0
-    data = parse_file(filename)
 
-    choices = {"X": ("A", "C", 1), "Y": ("B", "A", 2), "Z": ("C", "B", 3)}
-
-    for opponent_shape, player_shape in data:
-        selected_shape, can_defeat_shape, choice_score = choices[player_shape]
-        if opponent_shape == selected_shape:
-            ans += choice_score + 3
-        elif opponent_shape == can_defeat_shape:
-            ans += choice_score + 6
-        else:
-            ans += choice_score
+    for opponent_shape, player_shape in parse_file(filename):
+        selected_shape = STRATEGY_SHAPES[player_shape]
+        player_score = SCORES[selected_shape]
+        ans += player_score
+        ans += (
+            3
+            if opponent_shape == selected_shape
+            else 6
+            if opponent_shape == DEFEATED_SHAPES[selected_shape]
+            else 0
+        )
 
     return ans
 
 
 def part2(filename: str):
     ans = 0
-    ans = 0
-    data = parse_file(filename)
 
-    scores = {"A": 1, "B": 2, "C": 3}
-    shapes = {"A": "C", "B": "A", "C": "B"}
-
-    for opponent_shape, strategy in data:
-        player_shape = None
-        game_score = 0
+    for opponent_shape, strategy in parse_file(filename):
         if strategy == "X":
-            player_shape = shapes[opponent_shape]
+            ans += SCORES[DEFEATED_SHAPES[opponent_shape]]
         elif strategy == "Y":
-            player_shape = opponent_shape
-            game_score = 3
+            ans += SCORES[opponent_shape] + 3
         else:
-            player_shape = next(
-                shape
-                for shape, defeated_shape in shapes.items()
-                if opponent_shape == defeated_shape
-            )
-            game_score = 6
-        ans += game_score + scores[player_shape]
+            ans += SCORES[
+                next(
+                    shape
+                    for shape, defeated_shape in DEFEATED_SHAPES.items()
+                    if opponent_shape == defeated_shape
+                )
+            ]
+            ans += 6
     return ans
 
 
