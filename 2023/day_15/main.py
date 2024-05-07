@@ -32,31 +32,31 @@ def part1(path: Path):
 
 
 def part2(path: Path):
-    boxes = {k: list() for k in range(256)}
-    search_box = lambda label: next(
-        (i for i, x in enumerate(boxes[box]) if x[0] == label), None
+    boxes = [list() for _ in range(256)]
+    search_box = lambda label, box: next(
+        (i for i, (lens_label, _) in enumerate(box) if lens_label == label), None
     )
     for line in path.read_text().strip().split(","):
         if "=" in line:
             label, focal_length = line.split("=")
-            box = calculate_hash(label)
+            box_idx = calculate_hash(label)
             lens = (label, int(focal_length))
-            index = search_box(label)
-            if index is None:
-                boxes[box].append(lens)
+            lens_idx = search_box(label, boxes[box_idx])
+            if lens_idx is None:
+                boxes[box_idx].append(lens)
             else:
-                boxes[box][index] = lens
+                boxes[box_idx][lens_idx] = lens
         elif line.endswith("-"):
             label = line.removesuffix("-")
-            box = calculate_hash(label)
-            index = search_box(label)
-            if index is not None:
-                boxes[box].pop(index)
+            box_idx = calculate_hash(label)
+            lens_idx = search_box(label, boxes[box_idx])
+            if lens_idx is not None:
+                boxes[box_idx].pop(lens_idx)
 
     answer = 0
-    for box_num, box in boxes.items():
-        for slot, (_, focal_length) in enumerate(box, start=1):
-            answer += (1 + box_num) * slot * focal_length
+    for box_num, box_idx in enumerate(boxes, start=1):
+        for slot, (_, focal_length) in enumerate(box_idx, start=1):
+            answer += box_num * slot * focal_length
     return answer
 
 
