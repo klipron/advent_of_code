@@ -1,6 +1,7 @@
 import re
 from pathlib import Path
 from datetime import date
+from typing import Iterable
 from http.client import HTTPResponse
 from urllib.request import urlopen, Request
 
@@ -19,55 +20,51 @@ def get_input_file(advent_date: date):
     INPUT_FILE.write_bytes(resp.read(int(resp.getheader("Content-Length"))))
 
 
-def move(char: str, point: tuple[int, int]):
+def move(char: str, point: tuple[int, int], amount: int = 1):
     x, y = point
     if char in ("U", "3"):
-        return (x, y - 1)
+        return (x, y - amount)
     elif char in ("D", "1"):
-        return (x, y + 1)
+        return (x, y + amount)
     elif char in ("L", "2"):
-        return (x - 1, y)
+        return (x - amount, y)
     elif char in ("R", "0"):
-        return (x + 1, y)
+        return (x + amount, y)
     else:
         raise ValueError(f"Invalid character {char}.")
 
 
-def part1(path: Path):
+def calculate_area(polygon: Iterable[tuple[str, int]]):
     area = 0
-    length = 1
+    total_length = 0
     current_point = (0, 0)
+    for direction, side_length in polygon:
+        next_point = move(direction, current_point, side_length)
+        x, y = current_point
+        x1, y1 = next_point
+        area += ((x * y1) - (x1 * y)) / 2
+        total_length += side_length
+        current_point = next_point
+    return total_length + (int(abs(area)) - (total_length // 2)) + 1
+
+
+def part1(path: Path):
+    polygon = []
     for line in path.open().readlines():
-        char, num, _ = line.split(maxsplit=2)
-        for _ in range(int(num)):
-            next_point = move(char, current_point)
-            x, y = current_point
-            x1, y1 = next_point
-            area += ((x * y1) - (x1 * y)) / 2
-            length += 1
-            current_point = next_point
-    return length + int(abs(area)) - (length // 2)
+        char, num, _ = line.split()
+        polygon.append((char, int(num)))
+    return calculate_area(polygon)
 
 
 def part2(path: Path):
-    area = 0
-    length = 1
-    current_point = (0, 0)
-    lines = path.open().readlines()
-    total_lines = len(lines)
-    for i, line in enumerate(lines, start=1):
-        text = re.search(r"\(#(?P<value>\w+)\)", line).group("value")
+    polygon = []
+    for line in path.open().readlines():
+        # text = re.search(r"\(#(?P<value>\w+)\)", line).group("value")
+        text = re.sub(r"[\(\)#]", "", line.split()[-1])
         char = text[-1]
-        num = text[:-1]
-        for _ in range(int(num, base=16)):
-            next_point = move(char, current_point)
-            x, y = current_point
-            x1, y1 = next_point
-            area += ((x * y1) - (x1 * y)) / 2
-            length += 1
-            current_point = next_point
-        print(f"{i} of {total_lines}", end="\r")
-    return length + int(abs(area)) - (length // 2)
+        num = int(text[:-1], base=16)
+        polygon.append((char, num))
+    return calculate_area(polygon)
 
 
 def main():
@@ -82,7 +79,7 @@ def main():
         )
         return
     get_input_file(advent_date)
-    file = INPUT_FILE
+    file = TEST_FILE
     print(f"Answer Part 1: {part1(file) or ''}")
     print("=" * 80)
     print(f"Answer Part 2: {part2(file) or ''}")
