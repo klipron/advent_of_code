@@ -1,6 +1,7 @@
 import ssl
 import time
 from pathlib import Path
+from typing import Callable, Any
 from datetime import date, datetime
 from http.client import HTTPResponse
 from urllib.request import urlopen, Request
@@ -23,24 +24,25 @@ def get_input_file(advent_date: date):
     INPUT_FILE.write_bytes(resp.read(int(resp.getheader("Content-Length"))))
 
 
-def part1(path: Path):
+def get_answers(path: Path, part1: Callable[[Any], None], part2: Callable[[Any], None]):
     lines = path.open().readlines()
-    lists = zip(*(map(int, line.strip().split()) for line in lines))
-    # return sum(abs(x - y) for x, y in zip(*map(sorted, lists)))  # Option 1
-    return sum(abs(int.__sub__(*x)) for x in zip(*map(sorted, lists)))
+    lists = tuple(map(sorted, zip(*(map(int, line.strip().split()) for line in lines))))
 
+    part1(sum(abs(x - y) for x, y in zip(*map(sorted, lists))))  # Part 1 Option 1
+    part1(sum(abs(int.__sub__(*x)) for x in zip(*lists)))
 
-def part2(path: Path):
-    lines = path.open().readlines()
-    left, right = zip(*(map(int, line.strip().split()) for line in lines))
+    left, right = lists
 
-    # return sum(l * sum(1 for r in right if r == l) for l in left)  # Option 1: Very Slow
+    part2(
+        sum(l * sum(1 for r in right if r == l) for l in left)
+    )  # Part 2 Option 1: Very Slow
+    part2(sum(l * right.count(l) for l in left))  # Part 2 Option 2
 
     # counter = defaultdict(int)  # Customer Counter Implementation
     # for r in right:
     #     counter[r] += 1
     counter = Counter(right)
-    return sum(l * counter.get(l, 0) for l in left)
+    part2(sum(l * counter.get(l, 0) for l in left))
 
 
 def main():
@@ -55,11 +57,10 @@ def main():
         )
         return
     get_input_file(advent_date)
-    file = INPUT_FILE
-    print(f"Answer Part 1: {part1(file) or ''}")
-    print("=" * 80)
-    print(f"Answer Part 2: {part2(file) or ''}")
-    print("=" * 80)
+    path = INPUT_FILE
+    part1 = lambda x: print(f"Answer Part 1: {x or ''}", "=" * 80, sep="\n")
+    part2 = lambda x: print(f"Answer Part 2: {x or ''}", "=" * 80, sep="\n")
+    get_answers(path, part1, part2)
 
 
 if __name__ == "__main__":
