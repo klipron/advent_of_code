@@ -1,10 +1,10 @@
 import ssl
 import time
 from pathlib import Path
-from collections import Counter
 from datetime import date, datetime
 from http.client import HTTPResponse
 from urllib.request import urlopen, Request
+from collections import Counter, defaultdict
 
 KEY_FILE = Path("key.txt")
 TEST_FILE = Path(__file__).with_name("test.txt")
@@ -26,12 +26,19 @@ def get_input_file(advent_date: date):
 def part1(path: Path):
     lines = path.open().readlines()
     lists = zip(*(map(int, line.strip().split()) for line in lines))
+    # return sum(abs(x - y) for x, y in zip(*map(sorted, lists)))  # Option 1
     return sum(abs(int.__sub__(*x)) for x in zip(*map(sorted, lists)))
 
 
 def part2(path: Path):
     lines = path.open().readlines()
     left, right = zip(*(map(int, line.strip().split()) for line in lines))
+
+    # return sum(l * sum(1 for r in right if r == l) for l in left)  # Option 1: Very Slow
+
+    # counter = defaultdict(int)  # Customer Counter Implementation
+    # for r in right:
+    #     counter[r] += 1
     counter = Counter(right)
     return sum(l * counter.get(l, 0) for l in left)
 
