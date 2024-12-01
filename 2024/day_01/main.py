@@ -38,7 +38,7 @@ def get_answers(path: Path, part1: Callable[[Any], None], part2: Callable[[Any],
     )  # Part 2 Option 1: Very Slow
     part2(sum(l * right.count(l) for l in left))  # Part 2 Option 2
 
-    # counter = defaultdict(int)  # Customer Counter Implementation
+    # counter = defaultdict(int)  # Custom Counter Implementation
     # for r in right:
     #     counter[r] += 1
     counter = Counter(right)
