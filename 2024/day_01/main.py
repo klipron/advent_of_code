@@ -36,7 +36,7 @@ def part2(path: Path):
 
     # return sum(l * sum(1 for r in right if r == l) for l in left)  # Option 1: Very Slow
 
-    # counter = defaultdict(int)  # Customer Counter Implementation
+    # counter = defaultdict(int)  # Custom Counter Implementation
     # for r in right:
     #     counter[r] += 1
     counter = Counter(right)
