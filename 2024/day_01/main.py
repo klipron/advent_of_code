@@ -1,26 +1,28 @@
+import os
 import ssl
 import time
 from pathlib import Path
 from typing import Callable, Any
-from datetime import date, datetime
+from urllib.error import HTTPError
 from http.client import HTTPResponse
 from urllib.request import urlopen, Request
 from collections import Counter, defaultdict
 
-KEY_FILE = Path("key.txt")
 TEST_FILE = Path(__file__).with_name("test.txt")
 INPUT_FILE = Path(__file__).with_name("input.txt")
 
 
-def get_input_file(advent_date: date):
+def get_input_file(year: int, day: int):
     if INPUT_FILE.exists():
         return
-    url = f"https://adventofcode.com/{advent_date.year}/day/{advent_date.day}/input"
-    print(url)
+    url = f"https://adventofcode.com/{year}/day/{day}/input"
     req = Request(url)
-    req.add_header("Cookie", f"session={KEY_FILE.read_text()}")
+    req.add_header("Cookie", f"session={os.environ["AOC_SESSION"]}")
     context = ssl._create_unverified_context()
-    resp: HTTPResponse = urlopen(req, context=context)
+    try:
+        resp: HTTPResponse = urlopen(req, context=context)
+    except HTTPError as e:
+        return print(e.read().decode())
     INPUT_FILE.write_bytes(resp.read(int(resp.getheader("Content-Length"))))
 
 
@@ -48,16 +50,12 @@ def get_answers(path: Path, part1: Callable[[Any], None], part2: Callable[[Any],
 def main():
     day = int(Path(__file__).parent.name.split("_")[1])
     year = int(Path(__file__).parent.parent.name)
-    advent_date = datetime(year, 12, day)
-    print(f"Advent of Code Day {advent_date.day}")
+    print(f"Advent of Code {year} Day {day}")
     print("=" * 80)
-    if advent_date > datetime.now():
-        print(
-            f"Today's challenge is not ready as yet please try again in {advent_date - datetime.now()}"
-        )
-        return
-    get_input_file(advent_date)
+    get_input_file(year, day)
     path = INPUT_FILE
+    if not path.exists():
+        return
     part1 = lambda x: print(f"Answer Part 1: {x or ''}", "=" * 80, sep="\n")
     part2 = lambda x: print(f"Answer Part 2: {x or ''}", "=" * 80, sep="\n")
     get_answers(path, part1, part2)
