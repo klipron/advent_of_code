@@ -35,7 +35,6 @@ function solve(fileContents) {
       e
         .trim()
         .split(" ")
-        .filter((e) => e.length)
         .map((e) => parseInt(e))
     );
 
@@ -45,35 +44,27 @@ function solve(fileContents) {
    * @returns
    */
   function isSafe(levels) {
-    const lt = levels.reduce((acc, val) => acc && val < 0, true);
-    const gt = levels.reduce((acc, val) => acc && val > 0, true);
+    const diffs = levels.slice(0, -1).map((num, idx) => levels[idx + 1] - num);
+    const lt = diffs.reduce((acc, val) => acc && val < 0, true);
+    const gt = diffs.reduce((acc, val) => acc && val > 0, true);
     if (!(lt || gt)) {
       return false;
     }
-    if (levels.filter((num) => Math.abs(num) > 3).length) {
+    if (diffs.filter((num) => Math.abs(num) > 3).length) {
       return false;
     }
     return true;
   }
 
-  /**
-   *
-   * @param {number[]} nums
-   * @returns
-   */
-  function getDiffs(nums) {
-    return nums.slice(0, -1).map((num, idx) => nums[idx + 1] - num);
-  }
-
   let safe = 0;
   let unsafeIgnore = 0;
   for (const levels of lines) {
-    if (isSafe(getDiffs(levels))) {
+    if (isSafe(levels)) {
       safe += 1;
       continue;
     }
     for (const idx in levels) {
-      if (isSafe(getDiffs(levels.filter((_, i) => idx != i)))) {
+      if (isSafe(levels.filter((_, i) => idx != i))) {
         unsafeIgnore += 1;
         break;
       }
