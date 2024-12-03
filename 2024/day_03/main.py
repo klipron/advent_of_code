@@ -52,12 +52,12 @@ def get_substrings_v2(data: str):
 
 
 def get_answers(path: Path, part1: Callable[[Any], None], part2: Callable[[Any], None]):
-    data = path.read_text()
-    get_total = lambda text: sum(
+    text = path.read_text()
+    get_total: Callable[[str], int] = lambda text: sum(
         (int(x) * int(y)) for x, y in re.findall(r"mul\((\d+),(\d+)\)", text)
     )
-    part1(get_total(data))
-    part2(sum(get_total(substring) for substring in get_substrings_v2(data)))
+    part1(get_total(text))
+    part2(sum(get_total(substring) for substring in get_substrings_v2(text)))
 
 
 def main():
