@@ -3,13 +3,18 @@ import re
 import ssl
 import time
 from pathlib import Path
-from typing import Callable, Any
 from urllib.error import HTTPError
 from http.client import HTTPResponse
 from urllib.request import urlopen, Request
+from typing import Callable, Any, NamedTuple
 
 TEST_FILE = Path(__file__).with_name("test.txt")
 INPUT_FILE = Path(__file__).with_name("input.txt")
+
+
+class Answer(NamedTuple):
+    part: int
+    value: Any
 
 
 def get_input_file(year: int, day: int):
@@ -26,38 +31,40 @@ def get_input_file(year: int, day: int):
     INPUT_FILE.write_bytes(resp.read(int(resp.getheader("Content-Length"))))
 
 
-def get_substrings(data: str, *, start=0, do=True):
+def get_substrings(data: str, *, start=0, enabled=True):
     if start == -1:
         return
-    if do:
+    if enabled:
         idx = data.find("don't()", start)
         yield data[start:idx]
-        yield from get_substrings(data, start=idx, do=False)
+        yield from get_substrings(data, start=idx, enabled=False)
     else:
         idx = data.find("do()", start)
-        yield from get_substrings(data, start=idx, do=True)
+        yield from get_substrings(data, start=idx, enabled=True)
 
 
 def get_substrings_v2(data: str):
     idx = start = 0
-    do = True
+    enabled = True
     while idx != -1:
-        if do:
+        if enabled:
             idx = data.find("don't()", start)
             yield data[start:idx]
         else:
             idx = data.find("do()", start)
         start = idx
-        do = not do
+        enabled = not enabled
 
 
-def get_answers(path: Path, part1: Callable[[Any], None], part2: Callable[[Any], None]):
+def solve(path: Path, show_answer: Callable[[Answer], None]):
     text = path.read_text()
     get_total: Callable[[str], int] = lambda text: sum(
         (int(x) * int(y)) for x, y in re.findall(r"mul\((\d+),(\d+)\)", text)
     )
-    part1(get_total(text))
-    part2(sum(get_total(substring) for substring in get_substrings_v2(text)))
+    show_answer(Answer(1, get_total(text)))
+    show_answer(
+        Answer(2, sum(get_total(substring) for substring in get_substrings_v2(text)))
+    )
 
 
 def main():
@@ -68,9 +75,10 @@ def main():
     get_input_file(year, day)
     if not INPUT_FILE.exists():
         return
-    part1 = lambda x: print(f"Answer Part 1: {x or ''}", "=" * 80, sep="\n")
-    part2 = lambda x: print(f"Answer Part 2: {x or ''}", "=" * 80, sep="\n")
-    get_answers(INPUT_FILE, part1, part2)
+    show_answer: Callable[[Answer], None] = lambda answer: print(
+        f"Answer Part {answer.part}: {answer.value or ''}", "=" * 80, sep="\n"
+    )
+    solve(INPUT_FILE, show_answer)
 
 
 if __name__ == "__main__":
