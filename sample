@@ -1,14 +1,20 @@
 import os
+import re
 import ssl
 import time
 from pathlib import Path
-from typing import Callable, Any
 from urllib.error import HTTPError
 from http.client import HTTPResponse
 from urllib.request import urlopen, Request
+from typing import Callable, Any, NamedTuple
 
 TEST_FILE = Path(__file__).with_name("test.txt")
 INPUT_FILE = Path(__file__).with_name("input.txt")
+
+
+class Answer(NamedTuple):
+    part: int
+    value: Any
 
 
 def get_input_file(year: int, day: int):
@@ -25,9 +31,7 @@ def get_input_file(year: int, day: int):
     INPUT_FILE.write_bytes(resp.read(int(resp.getheader("Content-Length"))))
 
 
-def get_answers(
-    path: Path, part1: Callable[[Any], None], part2: Callable[[Any], None]
-): ...
+def solve(path: Path, show_answer: Callable[[Answer], None]): ...
 
 
 def main():
@@ -38,9 +42,10 @@ def main():
     get_input_file(year, day)
     if not INPUT_FILE.exists():
         return
-    part1 = lambda x: print(f"Answer Part 1: {x or ''}", "=" * 80, sep="\n")
-    part2 = lambda x: print(f"Answer Part 2: {x or ''}", "=" * 80, sep="\n")
-    get_answers(INPUT_FILE, part1, part2)
+    show_answer: Callable[[Answer], None] = lambda answer: print(
+        f"Answer Part {answer.part}: {answer.value or ''}", "=" * 80, sep="\n"
+    )
+    solve(INPUT_FILE, show_answer)
 
 
 if __name__ == "__main__":
