@@ -29,8 +29,8 @@ function showAnswer(answer) {
  */
 function solve(fileContents) {
   let enabled = true;
-  let doTotal = 0;
-  let dontTotal = 0;
+  let total = 0;
+  let enabledTotal = 0;
   Array.from(
     fileContents.matchAll(/mul\((\d+),(\d+)\)|do\(\)|don't\(\)/g)
   ).forEach((val) => {
@@ -38,14 +38,14 @@ function solve(fileContents) {
       enabled = true;
     } else if (val[0] == "don't()") {
       enabled = false;
-    } else if (enabled) {
-      doTotal += parseInt(val[1] || 0) * parseInt(val[2] || 0);
     } else {
-      dontTotal += parseInt(val[1] || 0) * parseInt(val[2] || 0);
+      const value = parseInt(val[1] || 0) * parseInt(val[2] || 0);
+      total += value;
+      enabledTotal += enabled ? value : 0;
     }
   }, 0);
-  showAnswer({ part: 1, value: doTotal + dontTotal });
-  showAnswer({ part: 2, value: doTotal });
+  showAnswer({ part: 1, value: total });
+  showAnswer({ part: 2, value: enabledTotal });
 }
 
 filePicker.addEventListener("change", () => {
