@@ -1,12 +1,11 @@
 import os
-import re
 import ssl
 import time
 from pathlib import Path
+from typing import NamedTuple
 from urllib.error import HTTPError
 from http.client import HTTPResponse
 from urllib.request import urlopen, Request
-from typing import Callable, Any, NamedTuple
 
 TEST_FILE = Path(__file__).with_name("test.txt")
 INPUT_FILE = Path(__file__).with_name("input.txt")
@@ -51,24 +50,34 @@ class Position(NamedTuple):
 
 
 class Guard:
-    def __init__(self, position: Position, direction: str) -> None:
-        self.position = position
-        self.last_point = None
-        self.direction = direction
-
-    def move(self):
-        self.last_point = self.position
-        moves = {
+    def __init__(self, grid: Grid) -> None:
+        self.grid = grid
+        self.position = next(p for p, c in grid.items() if c not in ("#", "."))
+        self.last_position = None
+        self.direction = self.grid[self.position]
+        self._moves = {
             "^": Position.move_up,
             "v": Position.move_down,
             "<": Position.move_left,
             ">": Position.move_right,
         }
-        self.position = moves[self.direction](self.position)
+        self._turns = {"^": ">", "v": "<", "<": "^", ">": "v"}
+
+    def move(self):
+        self.last_position = self.position
+        self.position = self._moves[self.direction](self.position)
 
     def turn(self):
-        self.position = self.last_point
-        self.direction = {"^": ">", "v": "<", "<": "^", ">": "v"}[self.direction]
+        self.position = self.last_position
+        self.direction = self._turns[self.direction]
+
+    def patrol(self):
+        while self.position in self.grid:
+            if self.grid[self.position] == "#":
+                self.turn()
+            else:
+                yield self.position, self.direction
+            self.move()
 
 
 def get_grid(path: Path):
@@ -79,34 +88,22 @@ def get_grid(path: Path):
     return grid
 
 
-def get_guard_path(grid: Grid, guard: Guard):
-    while guard.position in grid:
-        if grid[guard.position] == "#":
-            guard.turn()
-        else:
-            yield guard.position, guard.direction
-        guard.move()
-
-
 def solve(path: Path):
-    grid = get_grid(path)
-    starting_position = next(p for p, c in grid.items() if c not in ("#", "."))
-    guard = Guard(starting_position, grid[starting_position])
-    seen_positions = set(p for p, _ in get_guard_path(grid, guard))
+    guard = Guard(get_grid(path))
+    seen_positions = set(p for p, _ in guard.patrol())
     total_seen_positions = len(seen_positions)
 
     show_answer(part=1, answer=total_seen_positions)
 
     total = 0
     for i, pos in enumerate(seen_positions):
-        if pos == starting_position:
-            continue
         print(f"Checked {i+1} of {total_seen_positions}...".ljust(50), end="\r")
-        grid = get_grid(path)
-        guard = Guard(starting_position, grid[starting_position])
-        grid[pos] = "#"
+        guard = Guard(get_grid(path))
+        if guard.position == pos:
+            continue
+        guard.grid[pos] = "#"
         seen = set()
-        for guard_pos in get_guard_path(grid, guard):
+        for guard_pos in guard.patrol():
             if guard_pos in seen:
                 break
             seen.add(guard_pos)
