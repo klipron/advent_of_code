@@ -3,6 +3,7 @@ import ssl
 import time
 from pathlib import Path
 from typing import Callable, Any
+from functools import cmp_to_key
 from urllib.error import HTTPError
 from http.client import HTTPResponse
 from urllib.request import urlopen, Request
@@ -63,6 +64,29 @@ def solve(path: Path, show_answer: Callable[[int, Any], None]):
     show_answer(2, part2)
 
 
+def solve_v2(path: Path, show_answer: Callable[[int, Any], None]):
+    parts = path.read_text().split("\n\n")
+    ordering_rules = set(tuple(map(int, x.split("|"))) for x in parts[0].split())
+    pages_to_produce = tuple(tuple(map(int, x.split(","))) for x in parts[1].split())
+
+    part1 = 0
+    part2 = 0
+    for pages in pages_to_produce:
+        sorted_pages = tuple(
+            sorted(
+                pages,
+                key=cmp_to_key(lambda x, y: -1 if (x, y) in ordering_rules else 1),
+            )
+        )
+        if pages == sorted_pages:
+            part1 += pages[len(pages) // 2]
+        else:
+            part2 += sorted_pages[len(sorted_pages) // 2]
+
+    show_answer(1, part1)
+    show_answer(2, part2)
+
+
 def main():
     day = int(Path(__file__).parent.name.split("_")[1])
     year = int(Path(__file__).parent.parent.name)
@@ -75,6 +99,7 @@ def main():
         f"Answer Part {part}: {answer or ''}", "=" * 80, sep="\n"
     )
     solve(INPUT_FILE, show_answer)
+    solve_v2(INPUT_FILE, show_answer)
 
 
 if __name__ == "__main__":
