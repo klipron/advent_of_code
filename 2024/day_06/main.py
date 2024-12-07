@@ -26,7 +26,7 @@ def get_input_file(year: int, day: int):
 
 
 def show_answer(*, part: int, answer: int):
-    print(f"Answer Part {part}: {answer or ''}", "=" * 80, sep="\n")
+    print(f"Answer Part {part}: {answer or ''}".ljust(50), "=" * 80, sep="\n")
 
 
 Grid = dict["Position", str]
@@ -82,36 +82,47 @@ class Guard:
 
 def get_grid(path: Path):
     grid: Grid = {}
-    for ridx, line in enumerate(path.open().readlines()):
-        for cidx, char in enumerate(line.strip()):
-            grid[Position(cidx, ridx)] = char
+    with path.open() as fp:
+        ridx = 0
+        while line := fp.readline():
+            for cidx, char in enumerate(line.strip()):
+                grid[Position(cidx, ridx)] = char
+            ridx += 1
     return grid
 
 
 def solve(path: Path):
-    guard = Guard(get_grid(path))
-    seen_positions = set(p for p, _ in guard.patrol())
+    grid = get_grid(path)
+    guard = Guard(grid)
+    seen_positions = set(pos for pos, _ in guard.patrol())
     total_seen_positions = len(seen_positions)
-
     show_answer(part=1, answer=total_seen_positions)
 
-    total = 0
-    for i, pos in enumerate(seen_positions):
-        print(f"Checked {i+1} of {total_seen_positions}...".ljust(50), end="\r")
-        guard = Guard(get_grid(path))
-        if guard.position == pos:
+    loops_found = 0
+    last_seen_position = None
+    for i, seen_position in enumerate(seen_positions):
+        if grid[seen_position] != ".":
             continue
-        guard.grid[pos] = "#"
+        if last_seen_position is not None:
+            grid[last_seen_position] = "."
+        last_seen_position = seen_position
+        grid[seen_position] = "#"
+        print(
+            f"Checked {i+1} of {total_seen_positions}: {loops_found} loops found.".ljust(
+                50
+            ),
+            end="\r",
+        )
+        guard = Guard(grid)
         seen = set()
-        for guard_pos in guard.patrol():
-            if guard_pos in seen:
+        for guard_position in guard.patrol():
+            if guard_position in seen:
                 break
-            seen.add(guard_pos)
+            seen.add(guard_position)
         else:
             continue
-        total += 1
-    print(f"Checked {i+1} of {total_seen_positions}.".ljust(50))
-    show_answer(part=2, answer=total)
+        loops_found += 1
+    show_answer(part=2, answer=loops_found)
 
 
 def main():
