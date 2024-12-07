@@ -1,20 +1,76 @@
 import os
-import re
 import ssl
 import time
 import functools
 from pathlib import Path
+from typing import Callable
 from urllib.error import HTTPError
 from http.client import HTTPResponse
 from urllib.request import urlopen, Request
-from typing import Callable, Any, NamedTuple
 
 TEST_FILE = Path(__file__).with_name("test.txt")
 INPUT_FILE = Path(__file__).with_name("input.txt")
 
 
-def show_answer(*, part: int, answer: int):
-    print(f"Answer Part {part}: {answer or ''}".ljust(50), "=" * 80, sep="\n")
+@functools.lru_cache
+def int_to_base(num: int, *, length: int, base: int):
+    values = ()
+    while num:
+        num, rem = divmod(num, base)
+        values += (rem,)
+    text = "".join(map(str, reversed(values))).rjust(length, "0")
+    return map(int, text)
+
+
+@functools.lru_cache
+def get_operators(*, length: int, base: int):
+    return tuple(
+        tuple(x for x in int_to_base(i, length=length, base=base))
+        for i in range(int(str(base - 1) * length, base=base) + 1)
+    )
+
+
+def get_calibration_results(
+    equations: list[tuple[int, tuple[int, ...]]],
+    operator_functions: tuple[Callable[[int, int], int], ...],
+):
+    total = 0
+    total_equations = len(equations)
+    for idx, (test_result, values) in enumerate(equations, start=1):
+        print(f"{idx} of {total_equations}: {total}", end="\r")
+        for operators in get_operators(
+            length=len(values) - 1, base=len(operator_functions)
+        ):
+            result = values[0]
+            for i, operator_index in enumerate(operators, start=1):
+                result = operator_functions[operator_index](result, values[i])
+                if result > test_result:
+                    break
+            else:
+                if result == test_result:
+                    total += test_result
+                    break
+
+            # This version of applying operators uses reduce but is 10 secs slower.
+            # operators = (operator_functions[x] for x in operators)
+            # result = functools.reduce(
+            #     lambda acc, val: next(operators)(acc, val), values
+            # )
+
+    return total
+
+
+def solve(path: Path):
+    equations: list[tuple[int, tuple[int, ...]]] = []
+    for line in path.open().readlines():
+        key, value = line.strip().split(":")
+        equations.append((int(key), tuple(map(int, value.strip().split()))))
+
+    funcs = (int.__add__, int.__mul__)
+    show_answer(part=1, answer=get_calibration_results(equations, funcs))
+
+    funcs += (lambda x, y: int(str(x) + str(y)),)
+    show_answer(part=2, answer=get_calibration_results(equations, funcs))
 
 
 def get_input_file(year: int, day: int):
@@ -31,56 +87,8 @@ def get_input_file(year: int, day: int):
     INPUT_FILE.write_bytes(resp.read(int(resp.getheader("Content-Length"))))
 
 
-def int_to_base(num: int, *, base: int):
-    value = ""
-    while num:
-        num, rem = divmod(num, base)
-        value = str(rem) + value
-    return value
-
-
-def get_operators(*, length: int, funcs: tuple[Callable, ...]):
-    base = len(funcs)
-    for i in range(int(str(base - 1) * length, base=base) + 1):
-        yield (funcs[int(x)] for x in int_to_base(i, base=base).rjust(length, "0"))
-
-
-def get_calibration_results(
-    equations: list[tuple[int, tuple[int, ...]]],
-    operator_functions: tuple[Callable, ...],
-):
-    total = 0
-    total_equations = len(equations)
-    for idx, (test_result, values) in enumerate(equations, start=1):
-        print(f"{idx} of {total_equations}: {total}", end="\r")
-        for operators in get_operators(
-            length=len(values) - 1, funcs=operator_functions
-        ):
-            acc = values[0]
-            for i, op in enumerate(operators, start=1):
-                acc = op(acc, values[i])
-            if acc == test_result:
-                total += test_result
-                break
-    return total
-
-
-def solve(path: Path):
-    equations: list[tuple[int, tuple[int, ...]]] = []
-    for line in path.open().readlines():
-        key, value = line.strip().split(":")
-        equations.append((int(key), tuple(map(int, value.strip().split()))))
-
-    show_answer(
-        part=1, answer=get_calibration_results(equations, (int.__add__, int.__mul__))
-    )
-
-    show_answer(
-        part=2,
-        answer=get_calibration_results(
-            equations, (int.__add__, int.__mul__, lambda x, y: int(str(x) + str(y)))
-        ),
-    )
+def show_answer(*, part: int, answer: int):
+    print(f"Answer Part {part}: {answer or ''}".ljust(50), "=" * 80, sep="\n")
 
 
 def main():
