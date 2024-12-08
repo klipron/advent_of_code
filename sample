@@ -10,7 +10,7 @@ TEST_FILE = Path(__file__).with_name("test.txt")
 INPUT_FILE = Path(__file__).with_name("input.txt")
 
 
-def solve(path: Path): ...
+def solve(path: Path, *, test=False): ...
 
 
 def get_input_file(year: int, day: int):
@@ -39,6 +39,8 @@ def main():
     get_input_file(year, day)
     if not INPUT_FILE.exists():
         return
+    if TEST_FILE.exists():
+        solve(TEST_FILE, test=True)
     solve(INPUT_FILE)
 
 
