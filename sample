@@ -27,8 +27,12 @@ def get_input_file(year: int, day: int):
     INPUT_FILE.write_bytes(resp.read(int(resp.getheader("Content-Length"))))
 
 
-def show_answer(*, part: int, answer: int):
-    print(f"Answer Part {part}: {answer or ''}".ljust(50), "=" * 80, sep="\n")
+def show_answer(*, part: int, answer: int, test=False):
+    print(
+        f"{"Test Input " if test else ""}Answer Part {part}: {answer or ''}".ljust(50),
+        "=" * 80,
+        sep="\n",
+    )
 
 
 def main():
