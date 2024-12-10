@@ -37,31 +37,13 @@ def solve(path: Path):
         for next_point in current_point.get_next_points():
             if next_point not in grid:
                 continue
-            if grid[next_point] == grid[current_point] + 1:
-                yield from walk_path(next_point, starting_point)
-
-    def walk_path_part2(path: tuple[Point, ...]):
-        current_point = path[-1]
-        if grid[current_point] == 9:
-            yield path
-        for next_point in current_point.get_next_points():
-            if next_point not in grid:
+            if grid[next_point] != grid[current_point] + 1:
                 continue
-            if grid[next_point] == grid[current_point] + 1:
-                path += (next_point,)
-                yield from walk_path_part2(path)
+            yield from walk_path(next_point, starting_point)
 
-    part1_paths = set()
-    part2_paths = []
-    for point, num in grid.items():
-        if num != 0:
-            continue
-        for path in walk_path(point, point):
-            part1_paths.add(path)
-        for path in walk_path_part2((point,)):
-            part2_paths.append(path)
-    show_answer(part=1, answer=len(part1_paths))
-    show_answer(part=2, answer=len(part2_paths))
+    paths = [path for pt in grid if grid[pt] == 0 for path in walk_path(pt, pt)]
+    show_answer(part=1, answer=len(set(paths)))
+    show_answer(part=2, answer=len(paths))
 
 
 def get_input_file(year: int, day: int):
