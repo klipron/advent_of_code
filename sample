@@ -1,6 +1,9 @@
+import time
+
+start = time.time()
+
 import os
 import ssl
-import time
 from pathlib import Path
 from urllib.error import HTTPError
 from http.client import HTTPResponse
@@ -10,7 +13,7 @@ TEST_FILE = Path(__file__).with_name("test.txt")
 INPUT_FILE = Path(__file__).with_name("input.txt")
 
 
-def solve(path: Path, *, test=False): ...
+def solve(path: Path): ...
 
 
 def get_input_file(year: int, day: int):
@@ -49,7 +52,6 @@ def main():
 
 
 if __name__ == "__main__":
-    start = time.time()
     main()
     print(
         f"Completed execution of {Path(__file__).name} in {time.time()-start:.3f} seconds."
