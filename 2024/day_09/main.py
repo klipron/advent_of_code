@@ -52,31 +52,35 @@ def get_disk_map_text(disk_map):
 
 def solve(path: Path, *, test=False):
     disk_map = tuple(get_disk_map(path))
-    for idx in range(len(disk_map)):
+    total_blocks = len(disk_map)
+    for idx in range(total_blocks):
         print(idx, end="\r")
         if not disk_map[idx]["size"]:
             continue
-        while disk_map[idx]["free_space"]:
-            for edx in range(len(disk_map) - 1, -1, -1):
-                if not disk_map[idx]["free_space"]:
-                    break
-                if not disk_map[edx]["size"]:
-                    continue
-                while disk_map[edx]["size"] and disk_map[idx]["free_space"]:
-                    disk_map[idx]["allocations"].append(edx)
-                    disk_map[idx]["free_space"] -= 1
-                    disk_map[edx]["size"] -= 1
+        for edx in reversed(list(range(total_blocks))):
+            if not disk_map[idx]["free_space"]:
+                break
+            if not disk_map[edx]["size"]:
+                continue
+            while disk_map[edx]["size"] and disk_map[idx]["free_space"]:
+                disk_map[idx]["allocations"].append(edx)
+                disk_map[idx]["free_space"] -= 1
+                disk_map[edx]["size"] -= 1
     show_answer(part=1, answer=calculate_checksum(disk_map), test=test)
 
     disk_map = tuple(get_disk_map(path))
-    for edx in range(len(disk_map) - 1, -1, -1):
+    for edx in reversed(list(range(total_blocks))):
         print(edx, end="\r")
-        for idx in range(0, edx):
-            if disk_map[idx]["free_space"] < disk_map[edx]["size"]:
+        for idx in range(edx):
+            if (
+                not disk_map[idx]["free_space"]
+                or disk_map[idx]["free_space"] < disk_map[edx]["size"]
+            ):
                 continue
-            list.extend(disk_map[idx]["allocations"], [edx] * disk_map[edx]["size"])
-            disk_map[idx]["free_space"] -= disk_map[edx]["size"]
-            disk_map[edx]["reallocated"] += disk_map[edx]["size"]
+            size = disk_map[edx]["size"]
+            list.extend(disk_map[idx]["allocations"], [edx] * size)
+            disk_map[idx]["free_space"] -= size
+            disk_map[edx]["reallocated"] += size
             disk_map[edx]["size"] = 0
             break
     show_answer(part=2, answer=calculate_checksum(disk_map), test=test)
