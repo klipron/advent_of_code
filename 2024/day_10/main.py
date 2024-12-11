@@ -26,10 +26,11 @@ class Point(NamedTuple):
 
 
 def solve(path: Path):
-    grid: dict[Point, int] = {}
-    for y, line in enumerate(path.open()):
-        for x, num in enumerate(line.strip()):
-            grid[Point(x, y)] = int(num)
+    grid = {
+        Point(x, y): int(num)
+        for y, line in enumerate(path.open())
+        for x, num in enumerate(line.strip())
+    }
 
     def walk_path(current_point: Point, starting_point: Point):
         if grid[current_point] == 9:
