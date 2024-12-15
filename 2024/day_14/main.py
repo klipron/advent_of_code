@@ -60,7 +60,9 @@ def solve(path: Path, test=False):
             q4 += (robot,)
 
     show_answer(
-        part=1, answer=functools.reduce(int.__mul__, map(len, (q1, q2, q3, q4)))
+        part=1,
+        answer=functools.reduce(int.__mul__, map(len, (q1, q2, q3, q4))),
+        test=test,
     )
 
     christmas_tree_options = []
@@ -80,27 +82,19 @@ def solve(path: Path, test=False):
         christmas_tree_options.append(options)
 
     matched_positions = []
-    seen = set()
-    seconds = 0
-    while True:
-        print(seconds, end="\r")
+    for i in range(w * h):
+        print(i, end="\r")
         positions = []
         new_robots_positions = []
-        if robots[0] in seen:
-            break
-        seen.add(robots[0])
         for robot in robots:
             new_robot = robot.move(w, h)
             positions.append((robot.x, robot.y))
             new_robots_positions.append(new_robot)
         for options in christmas_tree_options:
-            matched_positions.append(
-                (len(set.intersection(options, positions)), seconds)
-            )
+            matched_positions.append((len(set.intersection(options, positions)), i))
         robots = new_robots_positions
-        seconds += 1
 
-    show_answer(part=2, answer=max(matched_positions)[1])
+    show_answer(part=2, answer=max(matched_positions)[1], test=test)
 
 
 def get_input_file(year: int, day: int):
